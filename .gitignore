@@ -1,13 +1,41 @@
-# Maven target folder
+# -------------------------------
+# Maven / Java
+# -------------------------------
 /target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
 
-# IntelliJ IDEA files
-/.idea/
-/*.iml
-
-# Logs
+# Maven logs
+log/
+logs/
 *.log
 
+# -------------------------------
+# IntelliJ IDEA
+# -------------------------------
+/.idea/
+/*.iml
+/out/
+/*.iws
+
+# -------------------------------
 # OS files
+# -------------------------------
 .DS_Store
 Thumbs.db
+
+# -------------------------------
+# TestNG / Reports
+# -------------------------------
+/test-output/
+/surefire-reports/
+/failsafe-reports/
+
+# -------------------------------
+# Optional: Temporary files
+# -------------------------------
+*.tmp
+*.swp
