@@ -16,11 +16,20 @@ public class BaseTest {
     public void setup() {
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
+
+        options.addArguments("--headless=new"); // run in headless mode (important for Jenkins)
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--remote-allow-origins=*");
-        if (ConfigReader.get("chrome.headless").equalsIgnoreCase("true")) {
-            options.addArguments("--headless=new");
-        }
+        options.addArguments("--disable-gpu");
+        options.addArguments("--window-size=1920,1080");
+
+
         driver = new ChromeDriver(options);
+
+
+
+
         driver.manage().window().maximize();
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
     }
