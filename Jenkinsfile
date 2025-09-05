@@ -1,10 +1,7 @@
 pipeline {
     agent any
 
-    tools {
-        jdk 'JDK-21'
-        maven 'Maven-3.9.0'
-    }
+
 
     parameters {
         string(name: 'BROWSER', defaultValue: 'chrome', description: 'Browser to run tests on')
