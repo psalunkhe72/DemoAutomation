@@ -1,10 +1,16 @@
 package base;
 
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+
+import java.io.File;
 
 public class BaseTest {
     public WebDriver driver;
@@ -39,4 +45,35 @@ public class BaseTest {
             driver.quit();
         }
     }
+
+    protected static ExtentReports extent;
+
+    @BeforeSuite
+    public void setupExtentReport() {
+        // 1. Create reports folder if it doesn't exist
+        File reportDir = new File("reports");
+        if (!reportDir.exists()) {
+            reportDir.mkdir();
+        }
+
+        // 2. Initialize ExtentSparkReporter
+        ExtentSparkReporter htmlReporter = new ExtentSparkReporter("reports/ExtentReport.html");
+
+        // 3. Initialize ExtentReports
+        extent = new ExtentReports();
+        extent.attachReporter(htmlReporter);
+    }
+
+    @AfterSuite
+    public void tearDownExtentReport() {
+        // Write everything to the report
+        extent.flush();
+    }
 }
+
+
+
+
+
+
+
