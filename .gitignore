@@ -39,3 +39,20 @@ Thumbs.db
 # -------------------------------
 *.tmp
 *.swp
+
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+
+
+
+# Reports
+/reports/
+/screenshots/
+
+
+# Credentials (never commit secrets!)
+*.properties
+*.env
