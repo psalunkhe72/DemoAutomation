@@ -4,10 +4,14 @@ import base.BaseTest;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import utils.ExtentManager;
 import utils.RetryAnalyzer;
 
 public class DemoQACheckBoxTest extends BaseTest {
+
+
 
     @Test(retryAnalyzer = utils.RetryAnalyzer.class)
     public void selectCheckBox() {

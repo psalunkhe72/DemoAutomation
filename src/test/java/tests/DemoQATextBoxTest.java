@@ -7,14 +7,22 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import utils.ExtentManager;
 import utils.RetryAnalyzer;
 
 import java.time.Duration;
 
 public class DemoQATextBoxTest extends BaseTest {
 
+
+
     @Test(retryAnalyzer = utils.RetryAnalyzer.class)
+
+
+
+
     public void fillTextBoxForm() {
         driver.get("https://demoqa.com/text-box");
 
