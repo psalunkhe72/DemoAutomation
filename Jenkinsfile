@@ -26,15 +26,16 @@ pipeline {
         stage('Publish Extent Report') {
             steps {
                 publishHTML(target: [
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: "${REPORT_DIR}",
-                    reportFiles: 'index.html',
-                    reportName: 'Extent Report'
+                    allowMissing: false,              // ❌ If report not found, fail the build
+                    alwaysLinkToLastBuild: true,      // 🔗 Sidebar link always points to latest report
+                    keepAll: true,                    // 📂 Keep reports from old builds too
+                    reportDir: 'target/extent-report',// 📂 Folder where Extent report is generated
+                    reportFiles: 'index.html',        // 📄 Main HTML file to publish
+                    reportName: 'Extent Report'       // 🏷️ Sidebar link name in Jenkins UI
                 ])
             }
         }
+
     }
 
     post {
