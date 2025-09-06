@@ -11,7 +11,7 @@ pipeline {
                 checkout([$class: 'GitSCM',
                           branches: [[name: '*/main']],
                           userRemoteConfigs: [[
-                              url: 'git@github.com:your-username/DemoAutomation.git'
+                              url: 'git@github.com:psalunkhe72/DemoAutomation.git'
                           ]]
                 ])
             }
