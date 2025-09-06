@@ -51,18 +51,11 @@ public class BaseTest {
 
     @BeforeSuite
     public void setupExtentReport() {
-        // 1. Create reports folder if it doesn't exist
-        File reportDir = new File("reports");
-        if (!reportDir.exists()) {
-            reportDir.mkdir();
-        }
 
-        // 2. Initialize ExtentSparkReporter
-        ExtentSparkReporter htmlReporter = new ExtentSparkReporter("reports/ExtentReport.html");
 
         // 3. Initialize ExtentReports
         extent = new ExtentReports();
-        extent.attachReporter(htmlReporter);
+
     }
 
     @AfterSuite(alwaysRun = true)

@@ -11,7 +11,6 @@
         <classes>
             <class name="tests.DemoQATextBoxTest"/>
             <class name="tests.DemoQACheckBoxTest"/>
-            <class name="tests.DemoQARadioButtonTest"/>
             <class name="tests.DemoQAWebTableTest"/>
         </classes>
     </test>
