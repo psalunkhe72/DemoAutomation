@@ -9,6 +9,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+import utils.ExtentManager;
 
 import java.io.File;
 
@@ -64,10 +65,12 @@ public class BaseTest {
         extent.attachReporter(htmlReporter);
     }
 
-    @AfterSuite
-    public void tearDownExtentReport() {
-        // Write everything to the report
-        extent.flush();
+    @AfterSuite(alwaysRun = true)
+    public void generateReport() {
+        if (ExtentManager.getInstance() != null) {
+            ExtentManager.getInstance().flush();
+            System.out.println("✅ Extent Report flushed to target/ExtentReport.html");
+        }
     }
 }
 
