@@ -80,12 +80,19 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            echo 'Archiving screenshots and JUnit reports...'
-            archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
-            junit 'target/surefire-reports/*.xml'
+   post {
+       always {
+           echo 'Archiving screenshots and JUnit reports...'
+           archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
+           junit 'target/surefire-reports/*.xml'
 
-            // Optional: stop Selenium Grid if started by pipeline
-            script {
-                if (p
+           // Optional: stop Selenium Grid if started by pipeline
+           script {
+               if (params.ENV == 'grid') {
+                   echo "Stopping Selenium Grid..."
+                   sh 'docker-compose -f docker-compose.yml down'
+               }
+           }
+       }
+   }
+
