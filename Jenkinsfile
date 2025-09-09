@@ -7,7 +7,6 @@ pipeline {
 
     parameters {
         choice(name: 'ENV', choices: ['local', 'grid', 'jenkins'], description: 'Select test environment')
-        choice(name: 'BROWSER', choices: ['chrome', 'firefox'], description: 'Select browser')
     }
 
     stages {
@@ -27,14 +26,25 @@ pipeline {
             steps {
                 echo "Starting Selenium Grid using docker-compose.yml..."
                 sh 'docker-compose -f docker-compose.yml up -d'
-                sh 'docker ps' // Optional: verify hub & nodes are running
+                sh 'docker ps'
             }
         }
 
         stage('Build & Test') {
             steps {
-                echo "Running tests on ${params.BROWSER} in ${params.ENV} environment..."
-                sh "mvn clean test -Dsurefire.suiteXmlFiles=testng.xml -Denv=${params.ENV} -Dbrowser=${params.BROWSER}"
+                script {
+                    def browsers = ['chrome', 'firefox']
+                    def tests = [:]
+
+                    for (b in browsers) {
+                        def browserName = b
+                        tests[browserName] = {
+                            sh "mvn clean test -Dsurefire.suiteXmlFiles=testng.xml -Denv=${params.ENV} -Dbrowser=${browserName}"
+                        }
+                    }
+
+                    parallel tests
+                }
             }
         }
 
