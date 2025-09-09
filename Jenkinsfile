@@ -5,6 +5,11 @@ pipeline {
         REPORT_DIR = "target/extent-report"
     }
 
+    parameters {
+        choice(name: 'ENV', choices: ['local', 'grid', 'jenkins'], description: 'Select test environment')
+        choice(name: 'BROWSER', choices: ['chrome', 'firefox'], description: 'Select browser')
+    }
+
     stages {
         stage('Checkout from GitHub') {
             steps {
@@ -17,31 +22,48 @@ pipeline {
             }
         }
 
+        stage('Start Selenium Grid') {
+            when { expression { params.ENV == 'grid' } }
+            steps {
+                echo "Starting Selenium Grid using docker-compose.yml..."
+                sh 'docker-compose -f docker-compose.yml up -d'
+                sh 'docker ps' // Optional: verify hub & nodes are running
+            }
+        }
+
         stage('Build & Test') {
             steps {
-                sh 'mvn clean test -Dsurefire.suiteXmlFiles=testng.xml -Denv=jenkins'
+                echo "Running tests on ${params.BROWSER} in ${params.ENV} environment..."
+                sh "mvn clean test -Dsurefire.suiteXmlFiles=testng.xml -Denv=${params.ENV} -Dbrowser=${params.BROWSER}"
             }
         }
 
         stage('Publish Extent Report') {
             steps {
                 publishHTML(target: [
-                    allowMissing: false,              // ❌ If report not found, fail the build
-                    alwaysLinkToLastBuild: true,      // 🔗 Sidebar link always points to latest report
-                    keepAll: true,                    // 📂 Keep reports from old builds too
-                    reportDir: 'target/extent-report',// 📂 Folder where Extent report is generated
-                    reportFiles: 'index.html',        // 📄 Main HTML file to publish
-                    reportName: 'Extent Report'       // 🏷️ Sidebar link name in Jenkins UI
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: "${REPORT_DIR}",
+                    reportFiles: 'index.html',
+                    reportName: 'Extent Report'
                 ])
             }
         }
-
     }
 
     post {
         always {
+            echo 'Archiving screenshots and JUnit reports...'
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
             junit 'target/surefire-reports/*.xml'
+
+            script {
+                if (params.ENV == 'grid') {
+                    echo "Stopping Selenium Grid..."
+                    sh 'docker-compose -f docker-compose.yml down'
+                }
+            }
         }
     }
 }

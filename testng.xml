@@ -1,13 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="DemoQA Suite" verbose="1" parallel="false">
-
-    <!-- ✅ Attach only Extent listener -->
+<suite name="DemoQA Suite" verbose="1" parallel="tests" thread-count="2">
     <listeners>
         <listener class-name="utils.TestListener"/>
     </listeners>
 
-    <test name="DemoQA Tests">
+    <test name="Chrome Tests">
+        <parameter name="browser" value="chrome"/>
+        <classes>
+            <class name="tests.DemoQATextBoxTest"/>
+            <class name="tests.DemoQACheckBoxTest"/>
+            <class name="tests.DemoQAWebTableTest"/>
+        </classes>
+    </test>
+
+    <test name="Firefox Tests">
+        <parameter name="browser" value="firefox"/>
         <classes>
             <class name="tests.DemoQATextBoxTest"/>
             <class name="tests.DemoQACheckBoxTest"/>

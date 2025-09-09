@@ -1,75 +1,127 @@
 package base;
 
 import com.aventstack.extentreports.ExtentReports;
-import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.testng.annotations.*;
 import utils.ExtentManager;
 
-import java.io.File;
+import java.net.URL;
 
 public class BaseTest {
-    public WebDriver driver;
 
-    @BeforeMethod
-    public void setup() {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--remote-allow-origins=*");
+    protected WebDriver driver;
+   protected static ExtentReports extent;
 
-        // Detect environment: default = local
+
+
+
+
+    @BeforeTest(alwaysRun = true)
+    @Parameters({"browser"})
+    public void setup(@Optional("chrome") String browser) {
         String env = System.getProperty("env", "local");
-        System.out.println("Running tests in environment: " + env);
+        System.out.println("Running tests in environment: " + env + " | Browser: " + browser);
 
-        if (env.equalsIgnoreCase("jenkins")) {
-            // ✅ Jenkins/Linux-safe options
-            options.addArguments("--headless=new");       // modern headless mode
-            options.addArguments("--no-sandbox");         // required on Jenkins
-            options.addArguments("--disable-dev-shm-usage"); // prevents crashes
-            options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,1080");
-        } else {
-            // ✅ Local (with browser UI)
-            options.addArguments("--start-maximized");
+        try {
+            if (env.equalsIgnoreCase("grid")) {
+                // Selenium Grid URL
+                URL gridUrl = new URL("http://localhost:4444/wd/hub");
+
+                if (browser.equalsIgnoreCase("firefox")) {
+                    FirefoxOptions firefoxOptions = new FirefoxOptions();
+                    firefoxOptions.addArguments("--headless=new");
+                    firefoxOptions.addArguments("--no-sandbox");
+                    firefoxOptions.addArguments("--disable-dev-shm-usage");
+                    firefoxOptions.addArguments("--disable-gpu");
+                    firefoxOptions.addArguments("--window-size=1920,1080");
+
+                    // Retry loop for Grid node
+                    int retries = 3;
+                    while (retries > 0) {
+                        try {
+                            driver = new RemoteWebDriver(gridUrl, firefoxOptions);
+                            System.out.println("✅ Connected to Grid Firefox node!");
+                            break;
+                        } catch (Exception e) {
+                            System.out.println("⚠ Firefox Grid node not ready, retrying in 5s...");
+                            Thread.sleep(5000);
+                            retries--;
+                        }
+                    }
+                    if (driver == null) {
+                        throw new RuntimeException("❌ Failed to connect to Selenium Grid Firefox node after retries");
+                    }
+
+                } else { // Chrome
+                    ChromeOptions chromeOptions = new ChromeOptions();
+                    chromeOptions.addArguments("--headless=new");
+                    chromeOptions.addArguments("--no-sandbox");
+                    chromeOptions.addArguments("--disable-dev-shm-usage");
+                    chromeOptions.addArguments("--disable-gpu");
+                    chromeOptions.addArguments("--window-size=1920,1080");
+                    chromeOptions.setCapability("se:recordVideo", false); // optional for stability
+
+                    // Retry loop for Grid node
+                    int retries = 3;
+                    while (retries > 0) {
+                        try {
+                            driver = new RemoteWebDriver(gridUrl, chromeOptions);
+                            System.out.println("✅ Connected to Grid Chrome node!");
+                            break;
+                        } catch (Exception e) {
+                            System.out.println("⚠ Chrome Grid node not ready, retrying in 5s...");
+                            Thread.sleep(5000);
+                            retries--;
+                        }
+                    }
+                    if (driver == null) {
+                        throw new RuntimeException("❌ Failed to connect to Selenium Grid Chrome node after retries");
+                    }
+                }
+
+            } else {
+                // Local execution
+                ChromeOptions chromeOptions = new ChromeOptions();
+                chromeOptions.addArguments("--remote-allow-origins=*");
+
+                if (env.equalsIgnoreCase("jenkins")) {
+                    chromeOptions.addArguments("--headless=new");
+                    chromeOptions.addArguments("--no-sandbox");
+                    chromeOptions.addArguments("--disable-dev-shm-usage");
+                    chromeOptions.addArguments("--disable-gpu");
+                    chromeOptions.addArguments("--window-size=1920,1080");
+                } else {
+                    chromeOptions.addArguments("--start-maximized");
+                }
+                driver = new ChromeDriver(chromeOptions);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("❌ Failed to initialize WebDriver for env=" + env + " and browser=" + browser, e);
         }
-
-        driver = new ChromeDriver(options);
     }
 
-    @AfterMethod
+    @AfterTest(alwaysRun = true)
     public void teardown() {
         if (driver != null) {
             driver.quit();
         }
     }
 
-    protected static ExtentReports extent;
-
-    @BeforeSuite
+    @BeforeSuite(alwaysRun = true)
     public void setupExtentReport() {
-
-
-        // 3. Initialize ExtentReports
-        extent = new ExtentReports();
-
+        extent = ExtentManager.getInstance();
     }
 
     @AfterSuite(alwaysRun = true)
     public void generateReport() {
-        if (ExtentManager.getInstance() != null) {
-            ExtentManager.getInstance().flush();
+        if (extent != null) {
+            extent.flush();
             System.out.println("✅ Extent Report flushed to target/ExtentReport.html");
         }
     }
 }
-
-
-
-
-
-
-
