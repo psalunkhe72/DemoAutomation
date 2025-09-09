@@ -9,6 +9,8 @@ pipeline {
         choice(name: 'ENV', choices: ['local', 'grid', 'jenkins'], description: 'Select test environment')
         string(name: 'BASE_URL', defaultValue: 'http://localhost:8080', description: 'Application base URL')
         choice(name: 'HEADLESS', choices: ['true', 'false'], description: 'Run browser in headless mode')
+        choice(name: 'BROWSER', choices: ['chrome', 'firefox', 'both'], description: 'Select browser to run')
+        string(name: 'TEST_SUITE', defaultValue: 'testng.xml', description: 'TestNG suite file to run')
     }
 
     stages {
@@ -35,15 +37,22 @@ pipeline {
         stage('Build & Test') {
             steps {
                 script {
-                    def browsers = ['chrome', 'firefox']
-                    def tests = [:]
+                    // Determine browsers to run
+                    def browsers = []
+                    if (params.BROWSER == 'both') {
+                        browsers = ['chrome', 'firefox']
+                    } else {
+                        browsers = [params.BROWSER]
+                    }
 
+                    // Prepare parallel test executions
+                    def tests = [:]
                     for (b in browsers) {
                         def browserName = b
                         tests[browserName] = {
                             sh """
                                 mvn clean test \
-                                -Dsurefire.suiteXmlFiles=testng.xml \
+                                -Dsurefire.suiteXmlFiles=${params.TEST_SUITE} \
                                 -Denv=${params.ENV} \
                                 -Dbrowser=${browserName} \
                                 -DbaseUrl=${params.BASE_URL} \
@@ -75,4 +84,8 @@ pipeline {
         always {
             echo 'Archiving screenshots and JUnit reports...'
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
-            junit 'target/surefire-reports
+            junit 'target/surefire-reports/*.xml'
+
+            // Optional: stop Selenium Grid if started by pipeline
+            script {
+                if (p
