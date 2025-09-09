@@ -11,6 +11,23 @@ pipeline {
     }
 
     stages {
+
+
+    stage('Start Selenium Grid') {
+        steps {
+            echo 'Starting Selenium Grid using docker-compose...'
+
+            // Clean existing containers and network
+            sh '''
+            docker stop selenium-hub chrome-node firefox-node || true
+            docker rm selenium-hub chrome-node firefox-node || true
+            docker network rm demoautomation_default || true
+            '''
+
+            // Start fresh Grid
+            sh 'docker-compose -f docker-compose.yml up -d'
+        }
+    }
         stage('Checkout from GitHub') {
             steps {
                 checkout scm
