@@ -14,25 +14,7 @@ pipeline {
 
 
 
-        stage('Start Selenium Grid') {
-            when {
-                expression { params.ENV == 'grid' }
-            }
-            steps {
-                echo "Cleaning old Selenium Grid containers and network..."
-                sh '''
-                docker stop selenium-hub chrome-node firefox-node || true
-                docker rm selenium-hub chrome-node firefox-node || true
-                docker network rm demoautomation_default || true
-                '''
-
-                echo "Starting Selenium Grid using docker-compose..."
-                sh 'docker-compose -f docker-compose.yml up -d'
-            }
-        }
-
-
-        stage('Build & Test') {
+          stage('Build & Test') {
             parallel {
                 stage('Chrome Tests') {
                     when {
