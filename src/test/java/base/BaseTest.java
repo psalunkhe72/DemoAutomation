@@ -14,11 +14,12 @@ import java.net.URL;
 public class BaseTest {
 
     protected WebDriver driver;
-   protected static ExtentReports extent;
+    protected static ExtentReports extent;
 
-
-
-
+    @BeforeSuite(alwaysRun = true)
+    public void setupExtentReport() {
+        extent = ExtentManager.getInstance();
+    }
 
     @BeforeTest(alwaysRun = true)
     @Parameters({"browser"})
@@ -28,16 +29,11 @@ public class BaseTest {
 
         try {
             if (env.equalsIgnoreCase("grid")) {
-                // Selenium Grid URL
                 URL gridUrl = new URL("http://localhost:4444/wd/hub");
 
                 if (browser.equalsIgnoreCase("firefox")) {
                     FirefoxOptions firefoxOptions = new FirefoxOptions();
-                    firefoxOptions.addArguments("--headless=new");
-                    firefoxOptions.addArguments("--no-sandbox");
-                    firefoxOptions.addArguments("--disable-dev-shm-usage");
-                    firefoxOptions.addArguments("--disable-gpu");
-                    firefoxOptions.addArguments("--window-size=1920,1080");
+                    firefoxOptions.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--window-size=1920,1080");
 
                     // Retry loop for Grid node
                     int retries = 3;
@@ -58,14 +54,9 @@ public class BaseTest {
 
                 } else { // Chrome
                     ChromeOptions chromeOptions = new ChromeOptions();
-                    chromeOptions.addArguments("--headless=new");
-                    chromeOptions.addArguments("--no-sandbox");
-                    chromeOptions.addArguments("--disable-dev-shm-usage");
-                    chromeOptions.addArguments("--disable-gpu");
-                    chromeOptions.addArguments("--window-size=1920,1080");
-                    chromeOptions.setCapability("se:recordVideo", false); // optional for stability
+                    chromeOptions.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--window-size=1920,1080");
+                    chromeOptions.setCapability("se:recordVideo", false);
 
-                    // Retry loop for Grid node
                     int retries = 3;
                     while (retries > 0) {
                         try {
@@ -89,11 +80,7 @@ public class BaseTest {
                 chromeOptions.addArguments("--remote-allow-origins=*");
 
                 if (env.equalsIgnoreCase("jenkins")) {
-                    chromeOptions.addArguments("--headless=new");
-                    chromeOptions.addArguments("--no-sandbox");
-                    chromeOptions.addArguments("--disable-dev-shm-usage");
-                    chromeOptions.addArguments("--disable-gpu");
-                    chromeOptions.addArguments("--window-size=1920,1080");
+                    chromeOptions.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--window-size=1920,1080");
                 } else {
                     chromeOptions.addArguments("--start-maximized");
                 }
@@ -112,13 +99,8 @@ public class BaseTest {
         }
     }
 
-    @BeforeSuite(alwaysRun = true)
-    public void setupExtentReport() {
-        extent = ExtentManager.getInstance();
-    }
-
     @AfterSuite(alwaysRun = true)
-    public void generateReport() {
+    public void generateReport() throws InterruptedException {
         if (extent != null) {
             extent.flush();
             System.out.println("✅ Extent Report flushed to target/ExtentReport.html");
