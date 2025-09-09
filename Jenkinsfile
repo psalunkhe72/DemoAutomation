@@ -41,17 +41,14 @@ pipeline {
 
     post {
         always {
-            echo 'Archiving screenshots and JUnit reports...'
-            archiveArtifacts artifacts: 'target/screenshots/**/*.png', allowEmptyArchive: true
-            junit 'target/surefire-reports/*.xml'
-        }
-        cleanup {
-            echo 'Stopping Selenium Grid if running...'
-            sh '''
-            if [ "$ENV" = "grid" ]; then
-                docker-compose -f docker-compose.yml down
-            fi
-            '''
+            echo "Archiving Extent Report..."
+            archiveArtifacts artifacts: 'target/extent-report/**', fingerprint: true
+            publishHTML([allowMissing: false,
+                         alwaysLinkToLastBuild: true,
+                         keepAll: true,
+                         reportDir: 'target/extent-report',
+                         reportFiles: 'index.html',
+                         reportName: 'Extent Report'])
         }
     }
-}
+
