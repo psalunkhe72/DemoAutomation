@@ -7,6 +7,8 @@ pipeline {
 
     parameters {
         choice(name: 'ENV', choices: ['local', 'grid', 'jenkins'], description: 'Select test environment')
+        string(name: 'BASE_URL', defaultValue: 'http://localhost:8080', description: 'Application base URL')
+        choice(name: 'HEADLESS', choices: ['true', 'false'], description: 'Run browser in headless mode')
     }
 
     stages {
@@ -39,7 +41,14 @@ pipeline {
                     for (b in browsers) {
                         def browserName = b
                         tests[browserName] = {
-                            sh "mvn clean test -Dsurefire.suiteXmlFiles=testng.xml -Denv=${params.ENV} -Dbrowser=${browserName}"
+                            sh """
+                                mvn clean test \
+                                -Dsurefire.suiteXmlFiles=testng.xml \
+                                -Denv=${params.ENV} \
+                                -Dbrowser=${browserName} \
+                                -DbaseUrl=${params.BASE_URL} \
+                                -Dheadless=${params.HEADLESS}
+                            """
                         }
                     }
 
@@ -66,14 +75,4 @@ pipeline {
         always {
             echo 'Archiving screenshots and JUnit reports...'
             archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
-            junit 'target/surefire-reports/*.xml'
-
-            script {
-                if (params.ENV == 'grid') {
-                    echo "Stopping Selenium Grid..."
-                    sh 'docker-compose -f docker-compose.yml down'
-                }
-            }
-        }
-    }
-}
+            junit 'target/surefire-reports
