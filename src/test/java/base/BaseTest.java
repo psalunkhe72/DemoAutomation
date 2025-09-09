@@ -21,7 +21,7 @@ public class BaseTest {
         extent = ExtentManager.getInstance();
     }
 
-    @BeforeTest(alwaysRun = true)
+    @BeforeClass(alwaysRun = true)
     @Parameters({"browser"})
     public void setup(@Optional("chrome") String browser) {
         String env = System.getProperty("env", "local");
@@ -92,7 +92,7 @@ public class BaseTest {
         }
     }
 
-    @AfterTest(alwaysRun = true)
+    @AfterClass(alwaysRun = true)
     public void teardown() {
         if (driver != null) {
             driver.quit();
