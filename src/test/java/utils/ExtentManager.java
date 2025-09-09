@@ -11,6 +11,9 @@ public class ExtentManager {
     private static ExtentReports extent;
     private static ThreadLocal<ExtentTest> test = new ThreadLocal<>();
 
+
+
+
     // Folder-based report path for Jenkins
     private static final String REPORT_FOLDER = System.getProperty("user.dir") + "/target/extent-report";
 
@@ -23,6 +26,9 @@ public class ExtentManager {
             ExtentSparkReporter reporter = new ExtentSparkReporter(reportPath);
             reporter.config().setReportName("DemoQA Automation Results");
             reporter.config().setDocumentTitle("Automation Test Report");
+
+            // ✅ Force offline mode
+            reporter.config().setOfflineMode(true);
 
             extent = new ExtentReports();
             extent.attachReporter(reporter);
