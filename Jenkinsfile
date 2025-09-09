@@ -7,69 +7,57 @@ pipeline {
 
     parameters {
         choice(name: 'ENV', choices: ['local', 'grid', 'jenkins'], description: 'Select test environment')
-        string(name: 'BASE_URL', defaultValue: 'http://localhost:8080', description: 'Application base URL')
-        choice(name: 'HEADLESS', choices: ['true', 'false'], description: 'Run browser in headless mode')
-        choice(name: 'BROWSER', choices: ['chrome', 'firefox', 'both'], description: 'Select browser to run')
-        string(name: 'TEST_SUITE', defaultValue: 'testng.xml', description: 'TestNG suite file to run')
+        choice(name: 'BROWSER', choices: ['chrome', 'firefox'], description: 'Select browser for local run')
     }
 
     stages {
+
         stage('Checkout from GitHub') {
             steps {
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/main']],
-                          userRemoteConfigs: [[
-                              url: 'git@github.com:psalunkhe72/DemoAutomation.git'
-                          ]]
-                ])
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'git@github.com:psalunkhe72/DemoAutomation.git']]])
             }
         }
 
         stage('Start Selenium Grid') {
-            when { expression { params.ENV == 'grid' } }
+            when {
+                expression { params.ENV == 'grid' }
+            }
             steps {
-                echo "Starting Selenium Grid using docker-compose.yml..."
+                echo 'Starting Selenium Grid using docker-compose.yml...'
                 sh 'docker-compose -f docker-compose.yml up -d'
-                sh 'docker ps'
             }
         }
 
         stage('Build & Test') {
-            steps {
-                script {
-                    // Determine browsers to run
-                    def browsers = []
-                    if (params.BROWSER == 'both') {
-                        browsers = ['chrome', 'firefox']
-                    } else {
-                        browsers = [params.BROWSER]
+            parallel {
+                stage('Chrome Tests') {
+                    when {
+                        expression { params.ENV != 'local' || params.BROWSER == 'chrome' }
                     }
-
-                    // Prepare parallel test executions
-                    def tests = [:]
-                    for (b in browsers) {
-                        def browserName = b
-                        tests[browserName] = {
-                            sh """
-                                mvn clean test \
-                                -Dsurefire.suiteXmlFiles=${params.TEST_SUITE} \
-                                -Denv=${params.ENV} \
-                                -Dbrowser=${browserName} \
-                                -DbaseUrl=${params.BASE_URL} \
-                                -Dheadless=${params.HEADLESS}
-                            """
-                        }
+                    steps {
+                        echo 'Running Chrome Tests...'
+                        sh "mvn clean test -Dsurefire.suiteXmlFiles=testng.xml -Denv=${params.ENV} -Dbrowser=chrome -DbaseUrl=http://localhost:8080 -Dheadless=true"
                     }
-
-                    parallel tests
+                }
+                stage('Firefox Tests') {
+                    when {
+                        expression { params.ENV != 'local' || params.BROWSER == 'firefox' }
+                    }
+                    steps {
+                        echo 'Running Firefox Tests...'
+                        sh "mvn clean test -Dsurefire.suiteXmlFiles=testng.xml -Denv=${params.ENV} -Dbrowser=firefox -DbaseUrl=http://localhost:8080 -Dheadless=true"
+                    }
                 }
             }
         }
 
         stage('Publish Extent Report') {
             steps {
+                echo 'Publishing Extent Reports...'
                 publishHTML(target: [
-                    allowMissing: false,
+                    allowMissing: true,
                     alwaysLinkToLastBuild: true,
                     keepAll: true,
                     reportDir: "${REPORT_DIR}",
@@ -83,16 +71,15 @@ pipeline {
     post {
         always {
             echo 'Archiving screenshots and JUnit reports...'
-            archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'target/screenshots/**/*.png', allowEmptyArchive: true
             junit 'target/surefire-reports/*.xml'
-
-            // Stop Selenium Grid if started by pipeline
-            script {
-                if (params.ENV == 'grid') {
-                    echo "Stopping Selenium Grid..."
-                    sh 'docker-compose -f docker-compose.yml down'
-                }
+        }
+        cleanup {
+            when {
+                expression { params.ENV == 'grid' }
             }
+            echo 'Stopping Selenium Grid...'
+            sh 'docker-compose -f docker-compose.yml down'
         }
     }
 }
